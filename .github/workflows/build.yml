@@ -17,9 +17,18 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - name: Install Android SDK
-        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+        run: |
+          if ! "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' > sdk.log 2>&1; then
+            while IFS= read -r line; do echo "::error::$line"; done < sdk.log
+            exit 1
+          fi
       - name: Build debug and unsigned optimized APKs
-        run: ./gradlew --no-daemon assembleDebug assembleRelease
+        run: |
+          if ! ./gradlew --no-daemon assembleDebug assembleRelease > build.log 2>&1; then
+            tail -60 build.log | while IFS= read -r line; do echo "::error::$line"; done
+            exit 1
+          fi
+          cat build.log
       - uses: actions/upload-artifact@v4
         with:
           name: cheragh-apks
