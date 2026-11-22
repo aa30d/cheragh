@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.IBinder;
-import android.widget.Toast;
 
 /** Keeps the torch's camera client alive until it is switched off. */
 public class TorchService extends Service {
@@ -17,9 +16,7 @@ public class TorchService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         if (Build.VERSION.SDK_INT >= 26) Notifications.start(this);
-        else if (Build.VERSION.SDK_INT >= 5) {
-            LegacyNotification.start(this);
-        }
+        else LegacyNotification.start(this);
         if (Build.VERSION.SDK_INT >= 23) modern = new ModernTorch(this);
     }
 
@@ -35,7 +32,7 @@ public class TorchService extends Service {
                     throw new IllegalStateException("No torch");
                 p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
                 camera.setParameters(p);
-                if (Build.VERSION.SDK_INT >= 11) texture = LegacyTexture.attach(camera);
+                texture = LegacyTexture.attach(camera);
                 camera.startPreview();
                 setOn(true);
             } catch (Exception e) { fail(); }
@@ -45,7 +42,6 @@ public class TorchService extends Service {
 
     void setOn(boolean value) { on = value; TorchWidget.update(this, value); }
     void fail() {
-        Toast.makeText(this, "Flashlight unavailable", Toast.LENGTH_SHORT).show();
         stopSelf();
     }
     @Override public void onDestroy() {
@@ -55,7 +51,7 @@ public class TorchService extends Service {
             camera.release();
             camera = null;
         }
-        if (texture != null && Build.VERSION.SDK_INT >= 11) LegacyTexture.release(texture);
+        if (texture != null) LegacyTexture.release(texture);
         setOn(false);
         super.onDestroy();
     }

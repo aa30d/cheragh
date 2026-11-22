@@ -8,5 +8,5 @@ class LegacyTexture {
         try { camera.setPreviewTexture(texture); } catch (IOException e) { release(texture); throw e; }
         return texture;
     }
-    static void release(Object texture) { if (android.os.Build.VERSION.SDK_INT >= 14) Texture14.release(texture); }
+    static void release(Object texture) { ((SurfaceTexture) texture).release(); }
 }
